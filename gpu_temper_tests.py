@@ -1,11 +1,26 @@
 import subprocess
 import requests
 import time
+# InfluxDB 2.x 기준
+INFLUXDB_URL="http://localhost:8086/api/v2/write?org=ORGANIZATION_NAME&bucket=BUCKET_NAME&precision=s"
+INFLUXDB_TOKEN = "Token" 
 
-INFLUXDB_URL="http://localhost:8086/api/v2/write?org=조직이름&bucket=버킷이름&precision=s"
-INFLUXDB_TOKEN = "토큰"  # 토큰 필요 (InfluxDB 2.x 기준)
+headers = {
+    "Authorization": f"Token {INFLUXDB_TOKEN}",
+    "Content-Type": "text/plain; charset=utf-8"
+}
 
-
+def get_cpu_temp():
+    try:
+        temps= psutil.sensors_temperatures()
+        for name, entries in temps.items():
+            for entry in entries:
+                if entry.label == '' or 'Package' in entry.label or 'Core' in entry.label:
+                    return entry.current
+        return None
+    except Exception as e:
+        print(f"CPU 온도 가져오기 실패:{e}")
+        return None
 
 def get_gpu_temp():
     result = subprocess.run(
@@ -15,10 +30,23 @@ def get_gpu_temp():
     return int(result.stdout.strip())
 
 while True:
-    temp = get_gpu_temp()
-    line = f"gpu_temperature value={temp}"
-    headers = {"Authorization": f"Token {INFLUXDB_TOKEN}"}
-    r = requests.post(INFLUXDB_URL, data=line, headers=headers)
-    
-    print(f"Sent GPU Temp: {temp}°C | Status: {r.status_code}")
+    cpu_temp = get_cpu_temp()
+    gpu_temp = get_gpu_temp()
+
+    lines = []
+    if cpu_temp is not None:
+        lines.append(f"cpu_temperature value={cpu_temp}")
+    if gpu_temp is not None:
+        lines.append(f"cpu_temperature value={gpu_temp}")
+
+    if lines:
+        data = '\n'.join(lines)
+        try:
+            response = requests.post(INFLUXDB_URL, headers = headers, data = data)
+            print(f"전송됨: GPU={gpu_temp}°C | CPU={cpu_temp}°C | 코드: {response.status_code}")
+        except Exception as e:
+            print(f"전송 실패: {e}")
+    else:
+        print("측정값 없음")
+        
     time.sleep(1)  # 1초마다 실행

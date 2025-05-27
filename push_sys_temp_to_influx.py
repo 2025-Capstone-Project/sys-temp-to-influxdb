@@ -23,11 +23,19 @@ def get_cpu_temp():
         return None
 
 def get_gpu_temp():
-    result = subprocess.run(
-        ["nvidia-smi", "--query-gpu=temperature.gpu", "--format=csv,noheader"],
-        capture_output=True, text=True
-    )
-    return int(result.stdout.strip())
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=temperature.gpu", "--format=csv,noheader"],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            return float(result.stdout.strip())
+        else:
+            print(f"GPU 온도 가져오기 실패:{result.stderr}")
+            return None
+    except FileNotFoundError:
+        print(f"nvidia-smi 명령을 찾을 수 없음")
+        return None
 
 while True:
     cpu_temp = get_cpu_temp()

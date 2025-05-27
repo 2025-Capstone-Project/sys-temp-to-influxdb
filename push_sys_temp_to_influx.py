@@ -1,6 +1,8 @@
 import subprocess
-import requests
 import time
+import psutil
+import requests
+
 # InfluxDB 2.x 기준
 INFLUXDB_URL="http://localhost:8086/api/v2/write?org=ORGANIZATION_NAME&bucket=BUCKET_NAME&precision=s"
 INFLUXDB_TOKEN = "Token" 
@@ -10,6 +12,7 @@ headers = {
     "Content-Type": "text/plain; charset=utf-8"
 }
 
+# CPU 온도
 def get_cpu_temp():
     try:
         temps= psutil.sensors_temperatures()
@@ -22,11 +25,12 @@ def get_cpu_temp():
         print(f"CPU 온도 가져오기 실패:{e}")
         return None
 
+# GPU 온도
 def get_gpu_temp():
     try:
         result = subprocess.run(
-            ["nvidia-smi", "--query-gpu=temperature.gpu", "--format=csv,noheader"],
-            capture_output=True, text=True
+            ['nvidia-smi', '--query-gpu=temperature.gpu', '--format=csv,noheader,nounits'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
         if result.returncode == 0:
             return float(result.stdout.strip())
@@ -45,13 +49,13 @@ while True:
     if cpu_temp is not None:
         lines.append(f"cpu_temperature value={cpu_temp}")
     if gpu_temp is not None:
-        lines.append(f"cpu_temperature value={gpu_temp}")
+        lines.append(f"gpu_temperature value={gpu_temp}")
 
     if lines:
         data = '\n'.join(lines)
         try:
             response = requests.post(INFLUXDB_URL, headers = headers, data = data)
-            print(f"전송됨: GPU={gpu_temp}°C | CPU={cpu_temp}°C | 코드: {response.status_code}")
+            print(f"전송됨: CPU={cpu_temp}°C | GPU={gpu_temp}°C | 코드: {response.status_code}")
         except Exception as e:
             print(f"전송 실패: {e}")
     else:

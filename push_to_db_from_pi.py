@@ -30,18 +30,14 @@ REQUIRED_KEYS = {
 }
 
 flags = {
-    'Temperature': False,  # client_ab로부터 a,b가 들어왔는지 여부
-    'Model': False   # client_cd로부터 c,d가 들어왔는지 여부
+    'Temperature': False,  # client 1로부터 Temperature가 들어왔는지 여부
+    'Model': False   # client 2로부터 Model_result가 들어왔는지 여부
 }
 
 # 스레드 간 안전을 위한 Lock
 lock = threading.Lock()
 
 def handle_client(conn, addr):
-    """
-    클라이언트(A)로부터 a, b 값을 수신하여
-    전역 변수 c, d에 저장.
-    """
     print(f"[B] Connection from {addr}")
     with conn, conn.makefile('r') as rf:
         for line in rf:
@@ -71,10 +67,6 @@ def handle_client(conn, addr):
                     _send_to_influxdb_and_reset()             
 
 def handle_client2(conn, addr):
-    """
-    클라이언트(A)로부터 a, b 값을 수신하여
-    전역 변수 c, d에 저장.
-    """
     print(f"[B] Connection from {addr}")
     with conn, conn.makefile('r') as rf:
         for line in rf:
@@ -107,7 +99,6 @@ def _send_to_influxdb_and_reset():
     lines.append(f"cpu_temperature value={data['cpu_temperature']}")
     lines.append(f"gpu_temperature value={data['gpu_temperature']}")
     lines.append(f"model_result value=\"{data['model_result']}\"")
-    print("gogogogoog")
 
     payload = "\n".join(lines)
     print(payload)
@@ -128,7 +119,6 @@ def _send_to_influxdb_and_reset():
     data['cpu_temperature']= None
     data['gpu_temperature']= None
     data['model_result']= None
-
 
 def main():
 

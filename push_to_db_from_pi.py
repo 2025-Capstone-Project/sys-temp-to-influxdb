@@ -5,7 +5,7 @@ import time
 import requests
 
 HOST = '0.0.0.0'
-PORT = 5000
+PORT1 = 5000
 PORT2 = 5001
 
 # InfluxDB 2.x 기준
@@ -30,13 +30,14 @@ REQUIRED_KEYS = {
 }
 
 flags = {
-    'Temperature': False,  # client 1로부터 Temperature가 들어왔는지 여부
-    'Model': False   # client 2로부터 Model_result가 들어왔는지 여부
+    'Temperature': False,  # Client 1로부터 Temperature가 들어왔는지 여부
+    'Model': False   # Client 2로부터 Model_result가 들어왔는지 여부
 }
 
 # 스레드 간 안전을 위한 Lock
 lock = threading.Lock()
 
+# Client1로 부터 Temperature 데이터 수신
 def handle_client(conn, addr):
     print(f"[B] Connection from {addr}")
     with conn, conn.makefile('r') as rf:
@@ -66,6 +67,7 @@ def handle_client(conn, addr):
                 if flags['Temperature'] and flags['Model']:
                     _send_to_influxdb_and_reset()             
 
+# Client2로 부터 Model_result 데이터 수신
 def handle_client2(conn, addr):
     print(f"[B] Connection from {addr}")
     with conn, conn.makefile('r') as rf:
@@ -94,6 +96,7 @@ def handle_client2(conn, addr):
                 if flags['Temperature'] and flags['Model']:
                     _send_to_influxdb_and_reset()
 
+# InfluxDB로 데이터 송신 
 def _send_to_influxdb_and_reset():
     lines= []
     lines.append(f"cpu_temperature value={data['cpu_temperature']}")
@@ -123,9 +126,9 @@ def _send_to_influxdb_and_reset():
 def main():
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server1, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server2:
-        server1.bind((HOST, PORT))
+        server1.bind((HOST, PORT1))
         server1.listen()
-        print(f"[B] Listening on {HOST}:{PORT}")
+        print(f"[B] Listening on {HOST}:{PORT1}")
         
         server2.bind((HOST, PORT2))
         server2.listen()

@@ -47,8 +47,8 @@ def handle_client(conn, addr):
 
             try:
                 data_json= json.loads(line)
-                cpu_val = data_json.get('a')
-                gpu_val = data_json.get('b')
+                cpu_val = data_json.get('cpu_temp')
+                gpu_val = data_json.get('gpu_temp')
             except json.JSONDecodeError:
                 print(f"[서버-CPU/GPU] JSON 파싱 실패: {line}")
                 continue
@@ -76,7 +76,7 @@ def handle_client2(conn, addr):
 
             try:
                 data_json= json.loads(line)
-                model_val = data_json.get('c')
+                model_val = data_json.get('model_result')
                 print("Clien 2 으로 수신받음")
             except json.JSONDecodeError:
                 print(f"[서버-CPU/GPU] JSON 파싱 실패: {line}")
@@ -98,7 +98,7 @@ def _send_to_influxdb_and_reset():
     lines= []
     lines.append(f"cpu_temperature value={data['cpu_temperature']}")
     lines.append(f"gpu_temperature value={data['gpu_temperature']}")
-    lines.append(f"model_result value=\"{data['model_result']}\"")
+    lines.append(f"model_result value={data['model_result']}")
 
     payload = "\n".join(lines)
     print(payload)

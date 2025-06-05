@@ -43,11 +43,11 @@ def send_loop():
         print(f"[A] Connected to {HOST}:{PORT}")
         while True:
             # a, b 값을 랜덤 생성
-            a = get_cpu_temp()
-            b = get_gpu_temp()
-            payload = json.dumps({'a': a, 'b': b})
+            cpu_temp = get_cpu_temp()
+            gpu_temp = get_gpu_temp()
+            payload = json.dumps({'cpu_temp': cpu_temp, 'gpu_temp': gpu_temp})
             s.sendall(payload.encode('utf-8') + b'\n')
-            print(f"[A] Sent -> a: {a:.2f}, b: {b:.2f}")
+            print(f"[A] Sent -> cpu_temp: {cpu_temp:.2f}, gpu_temp: {gpu_temp:.2f}")
             time.sleep(1)  # 5초마다 전송
 
 if __name__ == '__main__':

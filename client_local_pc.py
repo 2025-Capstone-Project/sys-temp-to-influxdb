@@ -5,8 +5,8 @@ import time
 import random
 import json
 
-HOST = 'IP'   # 서버 B 주소
-PORT = 5000          # 서버 B 포트
+HOST = 'IP'          # Raspberry Pi 서버 IP
+PORT = 5000          # Raspberry Pi 서버 Port
 
 # CPU 온도
 def get_cpu_temp():
@@ -36,19 +36,19 @@ def get_gpu_temp():
     except FileNotFoundError:
         print(f"nvidia-smi 명령을 찾을 수 없음")
         return None
-
+        
+# 소켓 통신 코드 (loop)
 def send_loop():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         print(f"[A] Connected to {HOST}:{PORT}")
         while True:
-            # a, b 값을 랜덤 생성
             cpu_temp = get_cpu_temp()
             gpu_temp = get_gpu_temp()
             payload = json.dumps({'cpu_temp': cpu_temp, 'gpu_temp': gpu_temp})
             s.sendall(payload.encode('utf-8') + b'\n')
             print(f"[A] Sent -> cpu_temp: {cpu_temp:.2f}, gpu_temp: {gpu_temp:.2f}")
-            time.sleep(1)  # 5초마다 전송
+            time.sleep(1)  # 1초마다 전송
 
 if __name__ == '__main__':
     send_loop()
